@@ -9,6 +9,18 @@ body {
     align-items: center;
   }
   
+  .admin-user-page {
+    background: url("https://images.pexels.com/photos/956999/milky-way-starry-sky-night-sky-star-956999.jpeg") no-repeat center center fixed;
+    background-size: cover;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+
   .container {
     background: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
     padding: 30px;

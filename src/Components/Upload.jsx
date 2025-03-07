@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import axios from "axios";
 
 const Upload = () => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -11,27 +12,40 @@ const Upload = () => {
         setSelectedFile(event.target.files[0]);
     };
 
-    // Handle form submission 
-    const handleDone = () => {
+    // Handle form submission
+    const handleDone = async () => {
         if (!selectedFile) {
             alert("Please select a file before submitting.");
             return;
         }
 
-        alert(`
-        File: ${selectedFile.name}
-        Page Size: ${pageSize}
-        Number of Copies: ${numCopies}
-        Print Type: ${printType}
-        
-        ✅ Sent to Print Shop (Simulation)
-        `);
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("page_size", pageSize);
+        formData.append("num_copies", numCopies);
+        formData.append("print_type", printType);
 
-        // Reset form after submission
-        setSelectedFile(null);
-        setPageSize("A4");
-        setNumCopies("1");
-        setPrintType("black_white");
+        try {
+            const token = localStorage.getItem("token");  // ✅ Retrieve authentication token
+            if (!token) {
+                alert("You must be logged in to upload a file.");
+                return;
+            }
+
+            const response = await axios.post("http://127.0.0.1:8000/api/upload/", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${token}`  // ✅ Corrected
+                }
+            });
+            
+
+            console.log("📂 Upload Success:", response.data);
+            alert("File uploaded successfully!");
+        } catch (error) {
+            console.error("❌ Upload failed:", error.response?.data || error);
+            alert("Upload failed!");
+        }
     };
 
     return (

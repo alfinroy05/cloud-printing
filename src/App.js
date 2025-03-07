@@ -5,14 +5,20 @@ import First from './Components/First';
 import Signup from './Components/Signup';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Upload from './Components/Upload';
+import Orders from './Components/Orders';
+import AdminOrUser from './Components/AdminOrUser';
+import AdminDashboard from './Components/AdminDashboard';
 
 function App() {
   return (
   <BrowserRouter>
   <Routes>
-    <Route path='/' element={<First/>}/>
+    <Route path='/' element={<AdminOrUser/>}/>
+    <Route path='/first' element={<First/>}/>
     <Route path='/signup' element={<Signup/>}/>
     <Route path='/upload' element={<Upload/>}/>
+    <Route path='/orders' element={<Orders/>}/>
+    <Route path='/admindashboard' element={<AdminDashboard/>}/>
   </Routes>
   </BrowserRouter>
   );
