@@ -8,6 +8,7 @@ import Upload from './Components/Upload';
 import Orders from './Components/Orders';
 import AdminOrUser from './Components/AdminOrUser';
 import AdminDashboard from './Components/AdminDashboard';
+import Payment from './Components/Payment';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
     <Route path='/upload' element={<Upload/>}/>
     <Route path='/orders' element={<Orders/>}/>
     <Route path='/admindashboard' element={<AdminDashboard/>}/>
+    <Route path='/payment' element={<Payment/>}/>
   </Routes>
   </BrowserRouter>
   );
