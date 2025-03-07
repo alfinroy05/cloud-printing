@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as pdfjsLib from "pdfjs-dist";
 import "pdfjs-dist/build/pdf.worker.entry";
@@ -17,6 +17,15 @@ const Upload = () => {
     const [numPages, setNumPages] = useState(1);
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState("");
+    const [stores, setStores] = useState([]);  // ✅ Store List
+    const [selectedStore, setSelectedStore] = useState("");  // ✅ Selected Store
+
+    // ✅ Fetch Available Stores
+    useEffect(() => {
+        axios.get("http://127.0.0.1:8000/api/stores/")
+            .then(response => setStores(response.data))
+            .catch(error => console.error("❌ Error fetching stores:", error));
+    }, []);
 
     // ✅ Handle file selection
     const handleFileChange = async (event) => {
@@ -42,6 +51,10 @@ const Upload = () => {
             setMessage("❌ Please select a file before submitting.");
             return;
         }
+        if (!selectedStore) {
+            setMessage("❌ Please select a store before proceeding.");
+            return;
+        }
 
         const formData = new FormData();
         formData.append("file", selectedFile);
@@ -49,6 +62,7 @@ const Upload = () => {
         formData.append("num_copies", numCopies);
         formData.append("print_type", printType);
         formData.append("num_pages", numPages);
+        formData.append("store_id", selectedStore);  // ✅ Send selected store
 
         try {
             setUploading(true);
@@ -68,7 +82,7 @@ const Upload = () => {
             });
 
             console.log("📂 Upload Success:", response.data);
-            setMessage("✅ File uploaded successfully!");
+            setMessage(`✅ File uploaded successfully! Sent to: ${response.data.store}`);
             setSelectedFile(null);
             setNumPages(1);
         } catch (error) {
@@ -94,6 +108,17 @@ const Upload = () => {
                                 <label className="form-label">Select a File:</label>
                                 <input type="file" className="form-control" onChange={handleFileChange} />
                                 {selectedFile && <p className="mt-2">📄 Selected: <strong>{selectedFile.name}</strong></p>}
+                            </div>
+
+                            {/* ✅ Store Selection Dropdown */}
+                            <div className="col col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
+                                <label className="form-label">Select Store</label>
+                                <select className="form-select" value={selectedStore} onChange={(e) => setSelectedStore(e.target.value)}>
+                                    <option value="">-- Choose a store --</option>
+                                    {stores.map(store => (
+                                        <option key={store.id} value={store.id}>{store.name}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             {/* ✅ Page Size Dropdown */}
