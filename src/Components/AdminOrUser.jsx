@@ -11,7 +11,7 @@ const AdminOrUser = () => {
                 <div className="row">
                     {/* Welcome Message Section */}
                     <div className="col col-12 text-center text-black">
-                        <h1 className="mt-5">🌟 Welcome to Web2Print! 🌟</h1>
+                        <h1 className="mt-5">💫 Welcome to Web2Print! 💫</h1>
                         <p className="lead">
                             Your one-stop solution for seamless document printing.
                             Upload your files, select your preferences, and get your prints ready hassle-free!

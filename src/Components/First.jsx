@@ -12,24 +12,23 @@ const First = () => {
   const handleLogin = async () => {
     setError(""); // ✅ Clear previous errors
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/login/", {
-        email,
-        password,
-      });
+      const response = await axios.post("http://127.0.0.1:8000/api/login/", { email, password });
 
-      // ✅ Store JWT token in local storage
-      localStorage.setItem("token", response.data.access);
-      localStorage.setItem("user", JSON.stringify(response.data.user)); // ✅ Save user details
-      alert("Login Successful!");
+      console.log("🔑 Login Response:", response.data); // ✅ Debugging step
 
-      // ✅ Redirect to dashboard
-      navigate("/upload");  
-    } catch (error) {
-      if (error.response) {
-        setError(error.response.data.error || "Invalid Email or Password!");
+      if (response.data.access) { 
+        localStorage.setItem("token", response.data.access);  // ✅ Store token
+        localStorage.setItem("user", JSON.stringify(response.data.user || {}));
+        console.log("✅ Token Stored:", localStorage.getItem("token")); // ✅ Debugging step
+        alert("Login Successful!");
+
+        navigate("/upload");  
       } else {
-        setError("Server error! Please try again later.");
+        setError("❌ Login failed! No token received.");
       }
+    } catch (error) {
+      console.error("❌ Login Error:", error.response?.data || error);
+      setError(error.response?.data?.error || "❌ Invalid Email or Password!");
     }
   };
 
