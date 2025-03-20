@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
+import { useNavigate } from "react-router-dom"; 
 import axios from "axios";
 import * as pdfjsLib from "pdfjs-dist";
 import "pdfjs-dist/build/pdf.worker.entry";
@@ -11,7 +11,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 const Upload = () => {
-    const navigate = useNavigate(); // ✅ React Router navigation
+    const navigate = useNavigate();
     const [selectedFile, setSelectedFile] = useState(null);
     const [pageSize, setPageSize] = useState("A4");
     const [numCopies, setNumCopies] = useState("1");
@@ -22,7 +22,7 @@ const Upload = () => {
     const [stores, setStores] = useState([]);
     const [selectedStore, setSelectedStore] = useState("");
 
-    // ✅ Fetch Available Stores
+    // ✅ Fetch Available Stores (Runs Once)
     useEffect(() => {
         axios.get("http://127.0.0.1:8000/api/stores/")
             .then(response => setStores(response.data))
@@ -52,7 +52,7 @@ const Upload = () => {
         }
     };
 
-    // ✅ Handle form submission
+    // ✅ Handle Upload
     const handleDone = async () => {
         if (!selectedFile) {
             setMessage("❌ Please select a file before submitting.");
@@ -60,6 +60,12 @@ const Upload = () => {
         }
         if (!selectedStore) {
             setMessage("❌ Please select a store before proceeding.");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setMessage("❌ You must be logged in to upload a file.");
             return;
         }
 
@@ -73,25 +79,19 @@ const Upload = () => {
 
         try {
             setUploading(true);
-            setMessage("");
-
-            const token = localStorage.getItem("token");
-            if (!token) {
-                setMessage("❌ You must be logged in to upload a file.");
-                return;
-            }
+            setMessage("⏳ Uploading... Please wait.");
 
             const response = await axios.post("http://127.0.0.1:8000/api/upload/", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
-                    "Authorization": `Bearer ${token}` // ✅ Corrected token format
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
             console.log("📂 Upload Success:", response.data);
             setMessage(`✅ File uploaded successfully! Sent to: ${response.data.store}`);
 
-            // ✅ Navigate to Payment Page after successful upload
+            // ✅ Navigate to Payment Page
             navigate("/payment", { state: { numPages, numCopies } });
 
         } catch (error) {
@@ -106,78 +106,76 @@ const Upload = () => {
     const totalCost = numPages * parseInt(numCopies) * 2;
 
     return (
-        <div>
-            <div className="container">
-                <div className="row">
-                    <div className="col col-12">
-                        <div className="row g-3">
+        <div className="container">
+            <div className="row">
+                <div className="col col-12">
+                    <div className="row g-3">
 
-                            {/* ✅ File Upload Section */}
-                            <div className="col col-12">
-                                <label className="form-label">Select a File:</label>
-                                <input type="file" className="form-control" onChange={handleFileChange} />
-                                {selectedFile && <p className="mt-2">📄 Selected: <strong>{selectedFile.name}</strong></p>}
-                            </div>
-
-                            {/* ✅ Store Selection Dropdown */}
-                            <div className="col col-12">
-                                <label className="form-label">Select Store</label>
-                                <select className="form-select" value={selectedStore} onChange={(e) => setSelectedStore(e.target.value)}>
-                                    <option value="">-- Choose a store --</option>
-                                    {stores.map(store => (
-                                        <option key={store.id} value={store.id}>{store.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* ✅ Page Size Dropdown */}
-                            <div className="col col-12">
-                                <label className="form-label">Select Page Size</label>
-                                <select className="form-select" value={pageSize} onChange={(e) => setPageSize(e.target.value)}>
-                                    <option value="A4">A4</option>
-                                    <option value="A3">A3</option>
-                                </select>
-                            </div>
-
-                            {/* ✅ Number of Copies Dropdown */}
-                            <div className="col col-12">
-                                <label className="form-label">No. of Copies</label>
-                                <select className="form-select" value={numCopies} onChange={(e) => setNumCopies(e.target.value)}>
-                                    {[...Array(10).keys()].map(i => (
-                                        <option key={i + 1} value={i + 1}>{i + 1}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* ✅ Print Type Dropdown */}
-                            <div className="col col-12">
-                                <label className="form-label">Print Colour</label>
-                                <select className="form-select" value={printType} onChange={(e) => setPrintType(e.target.value)}>
-                                    <option value="black_white">Black & White</option>
-                                    <option value="color">Color</option>
-                                </select>
-                            </div>
-
-                            {/* ✅ Total Cost Display */}
-                            <div className="col col-12">
-                                <p className="text-center"><strong>💰 Total Cost: ₹{totalCost}</strong></p>
-                            </div>
-
-                            {/* ✅ Submit Button */}
-                            <div className="col col-12">
-                                <button className="btn btn-success w-100" onClick={handleDone} disabled={uploading}>
-                                    {uploading ? "Uploading..." : "Proceed to Payment"}
-                                </button>
-                            </div>
-
-                            {/* ✅ Show Upload Message */}
-                            {message && (
-                                <div className="col col-12 text-center">
-                                    <p><strong>{message}</strong></p>
-                                </div>
-                            )}
-
+                        {/* ✅ File Upload Section */}
+                        <div className="col col-12">
+                            <label className="form-label">Select a File:</label>
+                            <input type="file" className="form-control" onChange={handleFileChange} />
+                            {selectedFile && <p className="mt-2">📄 Selected: <strong>{selectedFile.name}</strong></p>}
                         </div>
+
+                        {/* ✅ Store Selection */}
+                        <div className="col col-12">
+                            <label className="form-label">Select Store</label>
+                            <select className="form-select" value={selectedStore} onChange={(e) => setSelectedStore(e.target.value)}>
+                                <option value="">-- Choose a store --</option>
+                                {stores.map(store => (
+                                    <option key={store.id} value={store.id}>{store.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* ✅ Page Size */}
+                        <div className="col col-12">
+                            <label className="form-label">Select Page Size</label>
+                            <select className="form-select" value={pageSize} onChange={(e) => setPageSize(e.target.value)}>
+                                <option value="A4">A4</option>
+                                <option value="A3">A3</option>
+                            </select>
+                        </div>
+
+                        {/* ✅ Copies */}
+                        <div className="col col-12">
+                            <label className="form-label">No. of Copies</label>
+                            <select className="form-select" value={numCopies} onChange={(e) => setNumCopies(e.target.value)}>
+                                {[...Array(10).keys()].map(i => (
+                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* ✅ Print Type */}
+                        <div className="col col-12">
+                            <label className="form-label">Print Colour</label>
+                            <select className="form-select" value={printType} onChange={(e) => setPrintType(e.target.value)}>
+                                <option value="black_white">Black & White</option>
+                                <option value="color">Color</option>
+                            </select>
+                        </div>
+
+                        {/* ✅ Total Cost */}
+                        <div className="col col-12">
+                            <p className="text-center"><strong>💰 Total Cost: ₹{totalCost}</strong></p>
+                        </div>
+
+                        {/* ✅ Submit Button */}
+                        <div className="col col-12">
+                            <button className="btn btn-success w-100" onClick={handleDone} disabled={uploading}>
+                                {uploading ? "Uploading..." : "Proceed to Payment"}
+                            </button>
+                        </div>
+
+                        {/* ✅ Show Message */}
+                        {message && (
+                            <div className="col col-12 text-center">
+                                <p><strong>{message}</strong></p>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </div>
