@@ -15,7 +15,7 @@ const AdminDashboard = () => {
     }
 
     axios
-      .get("http://127.0.0.1:8000/api/orders/", {
+      .get("http://127.0.0.1:8000/orders/", {
         headers: { "Authorization": `Bearer ${token}` } // ✅ Attach token here
       })
       .then((response) => setOrders(response.data))
