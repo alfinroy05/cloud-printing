@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; 
 import axios from "axios";
 import * as pdfjsLib from "pdfjs-dist";
 import "pdfjs-dist/build/pdf.worker.entry";
 
 // ✅ Set the PDF.js Worker Path
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.js",
-    import.meta.url
+  "pdfjs-dist/build/pdf.worker.min.js",
+  import.meta.url
 ).toString();
 
 const Upload = () => {
@@ -119,7 +119,15 @@ const Upload = () => {
                         </div>
 
                         {/* ✅ Store Selection */}
-                       
+                        <div className="col col-12">
+                            <label className="form-label">Select Store</label>
+                            <select className="form-select" value={selectedStore} onChange={(e) => setSelectedStore(e.target.value)}>
+                                <option value="">-- Choose a store --</option>
+                                {stores.map(store => (
+                                    <option key={store.id} value={store.id}>{store.name}</option>
+                                ))}
+                            </select>
+                        </div>
 
                         {/* ✅ Page Size */}
                         <div className="col col-12">
@@ -154,12 +162,12 @@ const Upload = () => {
                             <p className="text-center"><strong>💰 Total Cost: ₹{totalCost}</strong></p>
                         </div>
 
+                        {/* ✅ Submit Button */}
                         <div className="col col-12">
-                            <button className="btn btn-success w-100" onClick={() => navigate('/map')}>
-                                Select Store
+                            <button className="btn btn-success w-100" onClick={handleDone} disabled={uploading}>
+                                {uploading ? "Uploading..." : "Proceed to Payment"}
                             </button>
                         </div>
-
 
                         {/* ✅ Show Message */}
                         {message && (
