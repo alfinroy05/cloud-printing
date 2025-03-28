@@ -1,90 +1,119 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useNavigate } from 'react-router-dom';
 
-const ShopMap = () => {
-  const [shops, setShops] = useState([]);
-  const [userLocation, setUserLocation] = useState([12.9716, 77.5946]); // Default to Bangalore
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+// Fix marker issues
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
-  // Fetch Shops from Backend
-  useEffect(() => {
-    const fetchShops = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/stores/');
-        if (!response.ok) {
-          throw new Error('Failed to fetch shops');
-        }
-        const data = await response.json();
-        setShops(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchShops();
-  }, []);
+// Custom Icons
+const userIcon = new L.Icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+});
+
+const shopIcon = new L.Icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3347/3347435.png',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+});
+
+// Haversine Formula for Distance Calculation
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const toRadian = (angle) => (Math.PI / 180) * angle;
+  const R = 6371; // Radius of Earth in km
+
+  const dLat = toRadian(lat2 - lat1);
+  const dLon = toRadian(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadian(lat1)) *
+      Math.cos(toRadian(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return (R * c).toFixed(2); // Distance in km
+};
+
+const MapComponent = ({ shops }) => {
+  const [userLocation, setUserLocation] = useState(null);
+  const navigate = useNavigate();
 
   // Get User Location
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude]);
-        },
-        (err) => {
-          console.warn('Geolocation error:', err.message);
-        }
-      );
-    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation([position.coords.latitude, position.coords.longitude]);
+      },
+      () => {
+        console.warn('Location permission denied. Using fallback location.');
+        setUserLocation([9.9312, 76.2673]); // Fallback to Kochi
+      }
+    );
   }, []);
 
-  const handleStoreClick = (e) => {
-    e.stopPropagation(); // Prevent Leaflet from closing the popup
-    navigate('/payment');
+  const handleShopSelect = (shop) => {
+    navigate('/upload', { state: { selectedStore: shop.id } });
   };
 
-  if (loading) return <p>Loading map and shops...</p>;
-  if (error) return <p>Error: {error}</p>;
-
   return (
-    <MapContainer center={userLocation} zoom={13} style={{ height: '500px', width: '90%' }}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <MapContainer
+      center={userLocation || [9.9312, 76.2673]}
+      zoom={13}
+      style={{ height: '600px', width: '100%' }}
+    >
+      <TileLayer
+        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        attribution='&copy; OpenStreetMap contributors'
+      />
 
-      {/* User Marker */}
-      <Marker position={userLocation}>
-        <Popup>You are here!</Popup>
-      </Marker>
+      {userLocation && <MapCenter position={userLocation} />}
 
-      {/* Shop Markers with Tooltip */}
-      {shops.length > 0 ? (
-        shops.map((shop, index) => (
-          shop.latitude && shop.longitude ? (
-            <Marker key={index} position={[shop.latitude, shop.longitude]}>
-              <Tooltip direction="top" offset={[0, -10]} permanent>
-                <span>{shop.name}</span>
-              </Tooltip>
-              <Popup>
-                <div
-                  style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-                  onClick={handleStoreClick}
-                >
-                  {shop.name}
-                </div>
-                <br />
-                Location: {shop.latitude}, {shop.longitude}
-              </Popup>
-            </Marker>
-          ) : null
-        ))
-      ) : (
-        <p>No nearby shops found</p>
+      {userLocation && (
+        <Marker position={userLocation} icon={userIcon}>
+          <Popup>You are here!</Popup>
+        </Marker>
       )}
+
+      {shops.map((shop) => (
+        <Marker key={shop.id} position={[shop.latitude, shop.longitude]} icon={shopIcon}>
+          <Popup>
+            <b>{shop.name}</b>
+            <br />
+            Latitude: {shop.latitude}, Longitude: {shop.longitude}
+            {userLocation && (
+              <>
+                <br />Distance: {calculateDistance(userLocation[0], userLocation[1], shop.latitude, shop.longitude)} km
+              </>
+            )}
+            <br />
+            <button style={{ marginTop: '8px', padding: '8px', cursor: 'pointer' }} onClick={() => handleShopSelect(shop)}>
+              Select This Shop
+            </button>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   );
 };
 
-export default ShopMap;
+// Center Map when User Location is Updated
+const MapCenter = ({ position }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(position, 13);
+  }, [position, map]);
+  return null;
+};
+
+export default MapComponent;
